@@ -23,10 +23,25 @@ files = [f'{sounds_absolute_path}/{file}' for file in files]
 sounds_playing = threading.Semaphore(max_sounds)
 
 def playsong():
-    # Picks a random sound from the list of sound files
-    random_index = random.randrange(len(files))
-    random_sound = files[random_index]
-    playsound(random_sound)
+    
+    ppid = os.getpid()
+    
+    child_pid = os.fork()
+    
+    if child_pid == 0:
+        
+        os.setuid(int(os.environ['SUDO_UID']))
+        
+        # Picks a random sound from the list of sound files
+        random_index = random.randrange(len(files))
+        random_sound = files[random_index]
+        playsound(random_sound)
+    else:
+        os.waitpid(child_pid, 0)
+        
+        # Release semaphore
+        sounds_playing.release()
+    
 
     # Release semaphore
     sounds_playing.release()
