@@ -1,5 +1,6 @@
 import keyboard
 from playsound import playsound
+import json
 
 import threading
 import random
@@ -15,14 +16,9 @@ sounds_folder="./sounds"
 #                (or do?)
 # ----------------------------------------
 
-# Loads all sounds files from "sounds" directory in the same parent directory as main program.
-files = os.listdir(sounds_folder)
-sounds_absolute_path = os.path.abspath(sounds_folder)
-files = [f'{sounds_absolute_path}/{file}' for file in files]
-
 sounds_playing = threading.Semaphore(max_sounds)
 
-def playsong():
+def playsong(musicpath):
     
     ppid = os.getpid()
     
@@ -32,10 +28,8 @@ def playsong():
         
         os.setuid(int(os.environ['SUDO_UID']))
         
-        # Picks a random sound from the list of sound files
-        random_index = random.randrange(len(files))
-        random_sound = files[random_index]
-        playsound(random_sound)
+
+        playsound(musicpath)
     else:
         os.waitpid(child_pid, 0)
         
@@ -46,12 +40,28 @@ def playsong():
     # Release semaphore
     sounds_playing.release()
 
+
+
+
+# Open and read the JSON file
+with open('settings.json', 'r') as file:
+    data = json.load(file)
+
+
+
 while True:
     event = keyboard.read_event()
+    
+    if event.name not in data['keys']:
+        print("%s not supported" % event.name)
+        continue
+    
+    musicpath = data['keys'][event.name]
 
     # When key is pressed start thread for playing sound
     # and check if we can decrement semaphore counter
     if event.event_type == "down" and sounds_playing.acquire(blocking=False):
+        print(musicpath)
 
-        thread = threading.Thread(target=playsong)
+        thread = threading.Thread(target=playsong, args=musicpath)
         thread.start()
