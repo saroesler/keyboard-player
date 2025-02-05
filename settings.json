@@ -1,10 +1,8 @@
 {
     "keys": {
-        "1": "karneval/abc.mp3",
-        "2": "karneval/abc.mp3",
-        "3": "karneval/abc.mp3",
-        "4": "karneval/abc.mp3",
-        "5": "karneval/abc.mp3",
-        "6": "karneval/abc.mp3"
+        "1": "karneval/Tusch/eintontusch.mp3",
+        "2": "karneval/Tusch/einfachtusch.mp3",
+        "3": "karneval/Tusch/dreifachtusch.mp3",
+        "4": "karneval/Tusch/tuschfanfare.mp3"
     }
 }

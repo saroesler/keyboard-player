@@ -16,7 +16,7 @@ sounds_folder="./sounds"
 #                (or do?)
 # ----------------------------------------
 
-sounds_playing = threading.Semaphore(max_sounds)
+# sounds_playing = threading.Semaphore(max_sounds)
 
 def playsong(musicpath):
     
@@ -34,11 +34,11 @@ def playsong(musicpath):
         os.waitpid(child_pid, 0)
         
         # Release semaphore
-        sounds_playing.release()
+        # sounds_playing.release()
     
 
     # Release semaphore
-    sounds_playing.release()
+    #sounds_playing.release()
 
 
 
@@ -60,8 +60,9 @@ while True:
 
     # When key is pressed start thread for playing sound
     # and check if we can decrement semaphore counter
-    if event.event_type == "down" and sounds_playing.acquire(blocking=False):
+    if event.event_type == "down":
+    # and sounds_playing.acquire(blocking=False):
         print(musicpath)
 
-        thread = threading.Thread(target=playsong, args=musicpath)
+        thread = threading.Thread(target=playsong, args=[musicpath])
         thread.start()
