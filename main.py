@@ -1,6 +1,7 @@
 import keyboard
 from playsound import playsound
 import json
+import sys
 
 import threading
 import random
@@ -18,20 +19,35 @@ sounds_folder="./sounds"
 
 # sounds_playing = threading.Semaphore(max_sounds)
 
-def playsong(musicpath):
+def playsong(musicpath, lastpids, blocking):
+    if len(lastpids) > 0:
+        for lastpid in lastpids:
+            child_pid, status = os.waitpid(lastpid, os.WNOHANG)
+            
+            if child_pid != 0:
+                lastpids.remove(lastpid)
+                print("clean")
     
-    ppid = os.getpid()
-    
-    child_pid = os.fork()
-    
-    if child_pid == 0:
+    if len(lastpids) == 0 or not blocking:
+        ppid = os.getpid()
         
-        os.setuid(int(os.environ['SUDO_UID']))
+        child_pid = os.fork()
         
-
-        playsound(musicpath)
+        if child_pid == 0:
+            
+            os.setuid(int(os.environ['SUDO_UID']))
+            #if blocking:
+            #    playsound(musicpath, True)
+            #else:
+            playsound(musicpath)
+            print("sound stop")
+            
+            exit(0)
+        else:
+            return lastpids + [child_pid]
     else:
-        os.waitpid(child_pid, 0)
+        print("busy: reject")
+    return lastpids
         
         # Release semaphore
         # sounds_playing.release()
@@ -41,13 +57,20 @@ def playsong(musicpath):
     #sounds_playing.release()
 
 
+blocking = True
 
+if len(sys.argv) > 1:
+    if sys.argv[1] == "blocking":
+        blocking = True
+    elif sys.argv[1] == "nonblocking":
+        blocking = False
 
 # Open and read the JSON file
 with open('settings.json', 'r') as file:
     data = json.load(file)
 
 
+lastpids = []
 
 while True:
     event = keyboard.read_event()
@@ -63,6 +86,6 @@ while True:
     if event.event_type == "down":
     # and sounds_playing.acquire(blocking=False):
         print(musicpath)
-
-        thread = threading.Thread(target=playsong, args=[musicpath])
-        thread.start()
+        
+        lastpids = playsong(musicpath, lastpids, blocking)
+    
